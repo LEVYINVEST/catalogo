@@ -50,6 +50,13 @@ body {
   letter-spacing: -0.02em;
 }
 
+.site-header__logo {
+  width: 100%;
+  max-width: 340px;
+  height: auto;
+  display: inline-block;
+}
+
 .site-header__underline {
   width: 56px;
   height: 3px;

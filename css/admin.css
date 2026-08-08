@@ -55,6 +55,14 @@
   box-shadow: var(--shadow-panel);
 }
 
+.auth-card__logo {
+  width: 100%;
+  max-width: 200px;
+  height: auto;
+  margin: 0 auto 20px;
+  display: block;
+}
+
 .auth-card__title {
   font-size: 1.4rem;
   font-weight: 700;
@@ -153,6 +161,17 @@
   padding: 32px 24px;
   max-width: 1200px;
   margin: 0 auto;
+}
+
+.admin-header__brand {
+  display: flex;
+  flex-direction: column;
+}
+
+.admin-header__logo {
+  width: 140px;
+  height: auto;
+  margin-bottom: 12px;
 }
 
 .admin-header__title {
