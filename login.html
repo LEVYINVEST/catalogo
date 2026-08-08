@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login — Catálogo</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/admin.css">
+</head>
+<body>
+  <main class="auth-page">
+    <form class="auth-card" id="login-form">
+      <h1 class="auth-card__title">Área administrativa</h1>
+      <p class="auth-card__subtitle">Entre para gerenciar os produtos do catálogo</p>
+
+      <label class="field-label" for="email">E-mail</label>
+      <input class="field-input" type="email" id="email" required autocomplete="username">
+
+      <label class="field-label" for="password">Senha</label>
+      <input class="field-input" type="password" id="password" required autocomplete="current-password">
+
+      <p class="auth-card__error" id="login-error"></p>
+
+      <button class="btn btn--primary" type="submit">Entrar</button>
+      <a class="auth-card__back" href="index.html">← Voltar ao catálogo</a>
+    </form>
+  </main>
+
+  <script type="module" src="js/login.js"></script>
+</body>
+</html>

@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin — Catálogo</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/admin.css">
+</head>
+<body>
+  <header class="admin-header">
+    <div>
+      <h1 class="admin-header__title">Gerenciar produtos</h1>
+      <p class="admin-header__email" id="admin-email"></p>
+    </div>
+    <div class="admin-header__actions">
+      <a class="btn btn--ghost" href="index.html">Ver catálogo</a>
+      <button class="btn btn--ghost" id="seed-btn" type="button">Importar catálogo padrão</button>
+      <button class="btn btn--ghost" id="logout-btn" type="button">Sair</button>
+    </div>
+  </header>
+
+  <main class="admin-main">
+    <section class="admin-panel">
+      <h2 class="admin-panel__title" id="form-title">Adicionar produto</h2>
+      <form class="admin-form" id="product-form">
+        <label class="field-label" for="field-name">Nome do produto</label>
+        <input class="field-input" type="text" id="field-name" required>
+
+        <label class="field-label" for="field-price">Preço atual (ex: R$ 199,90)</label>
+        <input class="field-input" type="text" id="field-price">
+
+        <label class="field-label" for="field-original-price">Preço original (opcional — preencha só se estiver com desconto)</label>
+        <input class="field-input" type="text" id="field-original-price" placeholder="Ex: R$ 249,90">
+
+        <label class="field-label" for="field-image-file">Imagem do produto</label>
+        <div class="image-upload">
+          <img class="image-upload__preview" id="image-preview" alt="" hidden>
+          <div class="image-upload__controls">
+            <label class="btn btn--ghost image-upload__button" for="field-image-file">Escolher imagem</label>
+            <input type="file" id="field-image-file" accept="image/*" hidden>
+            <span class="image-upload__status" id="image-upload-status"></span>
+          </div>
+        </div>
+        <input class="field-input" type="text" id="field-image" placeholder="Preenchido automaticamente após o upload, ou cole um link">
+
+        <label class="field-label" for="field-section">Seção (agrupamento exibido no catálogo)</label>
+        <input class="field-input" type="text" id="field-section" list="section-options" required placeholder="Ex: Perfumes Yara">
+        <datalist id="section-options"></datalist>
+
+        <label class="field-label" for="field-category">Categoria (usada nos filtros de busca)</label>
+        <input class="field-input" type="text" id="field-category" list="category-options" placeholder="Ex: Perfumes, Skincare, Hidratantes, Cabelo">
+        <datalist id="category-options"></datalist>
+
+        <div class="admin-form__actions">
+          <button class="btn btn--primary" type="submit" id="submit-btn">Adicionar</button>
+          <button class="btn btn--ghost" type="button" id="cancel-edit-btn" hidden>Cancelar edição</button>
+        </div>
+      </form>
+    </section>
+
+    <section class="admin-panel">
+      <h2 class="admin-panel__title">Produtos cadastrados</h2>
+      <p class="admin-empty" id="admin-empty" hidden>Nenhum produto cadastrado ainda. Use o formulário acima ou clique em "Importar catálogo padrão".</p>
+      <div id="admin-sections"></div>
+    </section>
+  </main>
+
+  <script src="js/products.js"></script>
+  <script type="module" src="js/admin.js"></script>
+</body>
+</html>

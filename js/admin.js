@@ -1,0 +1,247 @@
+import { supabase } from "./supabase-init.js";
+
+// products.js é carregado como script clássico antes deste módulo (veja admin.html)
+// e define a variável global CATALOG usada como catálogo padrão para importação.
+const SEED_CATALOG = typeof CATALOG !== "undefined" ? CATALOG : [];
+
+const form = document.getElementById("product-form");
+const nameInput = document.getElementById("field-name");
+const priceInput = document.getElementById("field-price");
+const originalPriceInput = document.getElementById("field-original-price");
+const imageInput = document.getElementById("field-image");
+const sectionInput = document.getElementById("field-section");
+const sectionOptions = document.getElementById("section-options");
+const categoryInput = document.getElementById("field-category");
+const categoryOptions = document.getElementById("category-options");
+const imageFileInput = document.getElementById("field-image-file");
+const imagePreview = document.getElementById("image-preview");
+const imageUploadStatus = document.getElementById("image-upload-status");
+const submitBtn = document.getElementById("submit-btn");
+const cancelEditBtn = document.getElementById("cancel-edit-btn");
+const formTitle = document.getElementById("form-title");
+const sectionsRoot = document.getElementById("admin-sections");
+const emptyMsg = document.getElementById("admin-empty");
+
+let editingId = null;
+
+async function requireSession() {
+  const { data: { session } } = await supabase.auth.getSession();
+  if (!session) {
+    window.location.href = "login.html";
+    return null;
+  }
+  document.getElementById("admin-email").textContent = session.user.email;
+  return session;
+}
+
+supabase.auth.onAuthStateChange((_event, session) => {
+  if (!session) window.location.href = "login.html";
+});
+
+document.getElementById("logout-btn").addEventListener("click", async () => {
+  await supabase.auth.signOut();
+  window.location.href = "login.html";
+});
+
+async function loadProducts() {
+  const { data, error } = await supabase.from("products").select("*").order("section");
+  if (error) {
+    alert("Erro ao carregar produtos: " + error.message);
+    return;
+  }
+  renderSections(data || []);
+  renderSectionOptions(data || []);
+  renderCategoryOptions(data || []);
+}
+
+function renderSectionOptions(products) {
+  const sections = Array.from(new Set(products.map((p) => p.section).filter(Boolean))).sort();
+  sectionOptions.innerHTML = sections.map((s) => `<option value="${s}"></option>`).join("");
+}
+
+function renderCategoryOptions(products) {
+  const categories = new Set(["Perfumes", "Skincare", "Hidratantes", "Cabelo"]);
+  products.forEach((p) => { if (p.category) categories.add(p.category); });
+  categoryOptions.innerHTML = Array.from(categories).sort().map((c) => `<option value="${c}"></option>`).join("");
+}
+
+function renderSections(products) {
+  sectionsRoot.innerHTML = "";
+  emptyMsg.hidden = products.length > 0;
+
+  const bySection = new Map();
+  products.forEach((p) => {
+    const key = p.section || "Sem seção";
+    if (!bySection.has(key)) bySection.set(key, []);
+    bySection.get(key).push(p);
+  });
+
+  bySection.forEach((items, title) => {
+    const sectionEl = document.createElement("div");
+    sectionEl.className = "admin-section";
+
+    const heading = document.createElement("h3");
+    heading.className = "admin-section__title";
+    heading.textContent = `${title} (${items.length})`;
+    sectionEl.appendChild(heading);
+
+    items.forEach((product) => sectionEl.appendChild(buildRow(product)));
+    sectionsRoot.appendChild(sectionEl);
+  });
+}
+
+function buildRow(product) {
+  const row = document.createElement("div");
+  row.className = "admin-row";
+  row.innerHTML = `
+    <img class="admin-row__thumb" src="${product.image || ""}" alt="">
+    <div class="admin-row__info">
+      <div class="admin-row__name">${product.name}</div>
+      <div class="admin-row__price">${product.original_price ? `<span class="admin-row__price-original">${product.original_price}</span> ` : ""}${product.price || "sem preço"}${product.category ? ` · ${product.category}` : ""}</div>
+    </div>
+    <div class="admin-row__actions">
+      <button type="button" data-action="edit">Editar</button>
+      <button type="button" data-action="delete">Excluir</button>
+    </div>
+  `;
+
+  row.querySelector('[data-action="edit"]').addEventListener("click", () => startEdit(product));
+  row.querySelector('[data-action="delete"]').addEventListener("click", () => removeProduct(product.id));
+
+  return row;
+}
+
+function showImagePreview(url) {
+  if (url) {
+    imagePreview.src = url;
+    imagePreview.hidden = false;
+  } else {
+    imagePreview.hidden = true;
+    imagePreview.removeAttribute("src");
+  }
+}
+
+function startEdit(product) {
+  editingId = product.id;
+  nameInput.value = product.name || "";
+  priceInput.value = product.price || "";
+  originalPriceInput.value = product.original_price || "";
+  imageInput.value = product.image || "";
+  sectionInput.value = product.section || "";
+  categoryInput.value = product.category || "";
+  showImagePreview(product.image || "");
+  imageUploadStatus.textContent = "";
+  formTitle.textContent = "Editar produto";
+  submitBtn.textContent = "Salvar alterações";
+  cancelEditBtn.hidden = false;
+  nameInput.scrollIntoView({ behavior: "smooth", block: "center" });
+}
+
+function resetForm() {
+  editingId = null;
+  form.reset();
+  showImagePreview("");
+  imageUploadStatus.textContent = "";
+  formTitle.textContent = "Adicionar produto";
+  submitBtn.textContent = "Adicionar";
+  cancelEditBtn.hidden = true;
+}
+
+imageFileInput.addEventListener("change", async () => {
+  const file = imageFileInput.files[0];
+  if (!file) return;
+
+  imageUploadStatus.textContent = "Enviando...";
+
+  const safeName = file.name.replace(/[^a-zA-Z0-9.\-_]/g, "-");
+  const path = `${Date.now()}-${safeName}`;
+
+  const { error: uploadError } = await supabase.storage
+    .from("product-images")
+    .upload(path, file, { upsert: true });
+
+  if (uploadError) {
+    imageUploadStatus.textContent = "";
+    alert("Erro ao enviar imagem: " + uploadError.message);
+    return;
+  }
+
+  const { data } = supabase.storage.from("product-images").getPublicUrl(path);
+  imageInput.value = data.publicUrl;
+  showImagePreview(data.publicUrl);
+  imageUploadStatus.textContent = "Imagem enviada.";
+});
+
+cancelEditBtn.addEventListener("click", resetForm);
+
+form.addEventListener("submit", async (event) => {
+  event.preventDefault();
+
+  const data = {
+    name: nameInput.value.trim(),
+    price: priceInput.value.trim(),
+    original_price: originalPriceInput.value.trim() || null,
+    image: imageInput.value.trim(),
+    section: sectionInput.value.trim(),
+    category: categoryInput.value.trim() || null
+  };
+
+  const { error } = editingId
+    ? await supabase.from("products").update(data).eq("id", editingId)
+    : await supabase.from("products").insert(data);
+
+  if (error) {
+    alert("Erro ao salvar produto: " + error.message);
+    return;
+  }
+
+  resetForm();
+  loadProducts();
+});
+
+async function removeProduct(id) {
+  if (!confirm("Excluir este produto do catálogo?")) return;
+  const { error } = await supabase.from("products").delete().eq("id", id);
+  if (error) {
+    alert("Erro ao excluir produto: " + error.message);
+    return;
+  }
+  loadProducts();
+}
+
+document.getElementById("seed-btn").addEventListener("click", async () => {
+  const { count } = await supabase.from("products").select("*", { count: "exact", head: true });
+  if (count && count > 0) {
+    alert("Já existem produtos cadastrados. O catálogo padrão só pode ser importado quando a lista estiver vazia.");
+    return;
+  }
+  if (!confirm("Importar todos os produtos do catálogo padrão para o banco de dados?")) return;
+
+  const rows = [];
+  SEED_CATALOG.forEach((section) => {
+    section.products.forEach((product) => {
+      rows.push({
+        name: product.name,
+        price: product.price,
+        original_price: product.original_price || null,
+        image: product.image,
+        section: section.title,
+        category: product.category || null
+      });
+    });
+  });
+
+  const { error } = await supabase.from("products").insert(rows);
+  if (error) {
+    alert("Erro ao importar catálogo: " + error.message);
+    return;
+  }
+
+  alert("Catálogo padrão importado com sucesso!");
+  loadProducts();
+});
+
+(async () => {
+  const session = await requireSession();
+  if (session) loadProducts();
+})();
