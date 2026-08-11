@@ -216,6 +216,98 @@
   margin-bottom: 16px;
 }
 
+.admin-panel__hint {
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+  margin-top: -10px;
+  margin-bottom: 20px;
+}
+
+.stats-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 14px;
+  margin-bottom: 24px;
+}
+
+.stats-card {
+  background: var(--card-bg-solid);
+  border: 1px solid var(--card-border);
+  border-radius: 14px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.stats-card__value {
+  font-size: 1.8rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.stats-card__label {
+  color: var(--text-secondary);
+  font-size: 0.8rem;
+}
+
+.stats-ranking {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.stats-ranking__row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.stats-ranking__position {
+  width: 28px;
+  flex-shrink: 0;
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+
+.stats-ranking__bar-wrap {
+  flex: 1;
+  min-width: 0;
+}
+
+.stats-ranking__name {
+  display: block;
+  font-size: 0.88rem;
+  font-weight: 600;
+  margin-bottom: 4px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.stats-ranking__bar {
+  background: var(--card-border);
+  border-radius: 999px;
+  height: 6px;
+  overflow: hidden;
+}
+
+.stats-ranking__bar-fill {
+  background: var(--accent);
+  height: 100%;
+  border-radius: 999px;
+}
+
+.stats-ranking__count {
+  flex-shrink: 0;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--text-secondary);
+  min-width: 24px;
+  text-align: right;
+}
+
 .admin-form {
   display: flex;
   flex-direction: column;

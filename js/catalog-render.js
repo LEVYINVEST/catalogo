@@ -15,6 +15,17 @@ function parsePrice(value) {
   return parseFloat(normalized);
 }
 
+function logClick(items) {
+  const rows = items.map((item) => ({
+    product_name: item.name,
+    section: item.section || null,
+    category: item.category || null
+  }));
+  supabase.from("clicks").insert(rows).then(({ error }) => {
+    if (error) console.warn("Não foi possível registrar o clique.", error);
+  });
+}
+
 function buildWhatsappLink(productName) {
   const message = `Olá! Tenho interesse no produto: ${productName}`;
   return `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`;
@@ -57,11 +68,17 @@ orderBarClear.addEventListener("click", () => {
   updateOrderBar();
 });
 
-function buildCard(product, key) {
+orderBarButton.addEventListener("click", () => {
+  logClick(Array.from(selectedProducts.values()));
+});
+
+function buildCard(product, key, sectionTitle) {
   const card = document.createElement("article");
   card.className = "card";
   card.dataset.name = product.name.toLowerCase();
   card.dataset.category = product.category || "Outros";
+
+  const productWithSection = { ...product, section: product.section || sectionTitle };
 
   const currentValue = parsePrice(product.price);
   const originalValue = parsePrice(product.original_price);
@@ -92,10 +109,14 @@ function buildCard(product, key) {
     </div>
   `;
 
+  card.querySelector(".card__button").addEventListener("click", () => {
+    logClick([productWithSection]);
+  });
+
   const checkbox = card.querySelector(".card__select-input");
   checkbox.addEventListener("change", () => {
     card.classList.toggle("card--selected", checkbox.checked);
-    toggleSelection(key, product, checkbox.checked);
+    toggleSelection(key, productWithSection, checkbox.checked);
   });
 
   return card;
@@ -120,7 +141,7 @@ function renderSections(sections) {
     grid.className = "catalog-grid";
     section.products.forEach((product) => {
       const key = `${section.title}|${product.name}`;
-      grid.appendChild(buildCard(product, key));
+      grid.appendChild(buildCard(product, key, section.title));
     });
     sectionEl.appendChild(grid);
 

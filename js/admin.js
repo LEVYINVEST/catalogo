@@ -209,6 +209,56 @@ async function removeProduct(id) {
   loadProducts();
 }
 
+const statsTotal = document.getElementById("stats-total");
+const statsToday = document.getElementById("stats-today");
+const statsProducts = document.getElementById("stats-products");
+const statsEmpty = document.getElementById("stats-empty");
+const statsRanking = document.getElementById("stats-ranking");
+
+async function loadStats() {
+  const { data, error } = await supabase.from("clicks").select("product_name, created_at");
+
+  if (error) {
+    statsEmpty.hidden = false;
+    statsEmpty.textContent = "Painel de estatísticas ainda não configurado (rode o clicks.sql no Supabase).";
+    return;
+  }
+
+  const clicks = data || [];
+  statsTotal.textContent = clicks.length;
+
+  const todayStr = new Date().toDateString();
+  const todayCount = clicks.filter((c) => new Date(c.created_at).toDateString() === todayStr).length;
+  statsToday.textContent = todayCount;
+
+  const counts = new Map();
+  clicks.forEach((c) => counts.set(c.product_name, (counts.get(c.product_name) || 0) + 1));
+  statsProducts.textContent = counts.size;
+
+  statsEmpty.hidden = clicks.length > 0;
+
+  const ranked = Array.from(counts, ([name, count]) => ({ name, count })).sort((a, b) => b.count - a.count);
+  const maxCount = ranked.length ? ranked[0].count : 1;
+
+  statsRanking.innerHTML = ranked
+    .slice(0, 15)
+    .map(
+      (item, index) => `
+        <div class="stats-ranking__row">
+          <span class="stats-ranking__position">${index + 1}º</span>
+          <div class="stats-ranking__bar-wrap">
+            <span class="stats-ranking__name">${item.name}</span>
+            <div class="stats-ranking__bar">
+              <div class="stats-ranking__bar-fill" style="width: ${(item.count / maxCount) * 100}%"></div>
+            </div>
+          </div>
+          <span class="stats-ranking__count">${item.count}</span>
+        </div>
+      `
+    )
+    .join("");
+}
+
 document.getElementById("seed-btn").addEventListener("click", async () => {
   const { count } = await supabase.from("products").select("*", { count: "exact", head: true });
   if (count && count > 0) {
@@ -243,5 +293,8 @@ document.getElementById("seed-btn").addEventListener("click", async () => {
 
 (async () => {
   const session = await requireSession();
-  if (session) loadProducts();
+  if (session) {
+    loadProducts();
+    loadStats();
+  }
 })();

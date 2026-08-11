@@ -23,6 +23,29 @@
 
   <main class="admin-main">
     <section class="admin-panel">
+      <h2 class="admin-panel__title">Produtos mais pedidos</h2>
+      <p class="admin-panel__hint">Toda vez que alguém clica em "Encomendar agora" (ou "Encomendar selecionados"), conta aqui.</p>
+
+      <div class="stats-row">
+        <div class="stats-card">
+          <span class="stats-card__value" id="stats-total">0</span>
+          <span class="stats-card__label">Cliques no total</span>
+        </div>
+        <div class="stats-card">
+          <span class="stats-card__value" id="stats-today">0</span>
+          <span class="stats-card__label">Cliques hoje</span>
+        </div>
+        <div class="stats-card">
+          <span class="stats-card__value" id="stats-products">0</span>
+          <span class="stats-card__label">Produtos com pedido</span>
+        </div>
+      </div>
+
+      <p class="admin-empty" id="stats-empty" hidden>Ainda não há cliques registrados. Assim que alguém encomendar pelo catálogo, o ranking aparece aqui.</p>
+      <div id="stats-ranking" class="stats-ranking"></div>
+    </section>
+
+    <section class="admin-panel">
       <h2 class="admin-panel__title" id="form-title">Adicionar produto</h2>
       <form class="admin-form" id="product-form">
         <label class="field-label" for="field-name">Nome do produto</label>
