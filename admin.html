@@ -23,6 +23,18 @@
 
   <main class="admin-main">
     <section class="admin-panel">
+      <h2 class="admin-panel__title">Configurações</h2>
+      <form class="admin-form" id="settings-form">
+        <label class="field-label" for="field-whatsapp">Número de WhatsApp (DDI+DDD+número, só dígitos)</label>
+        <input class="field-input" type="text" id="field-whatsapp" placeholder="Ex: 5585999999999" required>
+        <div class="admin-form__actions">
+          <button class="btn btn--primary" type="submit" id="settings-submit-btn">Salvar número</button>
+        </div>
+        <p class="admin-panel__hint" id="settings-status"></p>
+      </form>
+    </section>
+
+    <section class="admin-panel">
       <h2 class="admin-panel__title">Produtos mais pedidos</h2>
       <p class="admin-panel__hint">Toda vez que alguém clica em "Encomendar agora" (ou "Encomendar selecionados"), conta aqui.</p>
 

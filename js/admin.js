@@ -1,4 +1,5 @@
 import { supabase } from "./supabase-init.js";
+import { escapeHtml } from "./html-utils.js";
 
 // products.js é carregado como script clássico antes deste módulo (veja admin.html)
 // e define a variável global CATALOG usada como catálogo padrão para importação.
@@ -94,10 +95,10 @@ function buildRow(product) {
   const row = document.createElement("div");
   row.className = "admin-row";
   row.innerHTML = `
-    <img class="admin-row__thumb" src="${product.image || ""}" alt="">
+    <img class="admin-row__thumb" src="${escapeHtml(product.image || "")}" alt="">
     <div class="admin-row__info">
-      <div class="admin-row__name">${product.name}</div>
-      <div class="admin-row__price">${product.original_price ? `<span class="admin-row__price-original">${product.original_price}</span> ` : ""}${product.price || "sem preço"}${product.category ? ` · ${product.category}` : ""}</div>
+      <div class="admin-row__name">${escapeHtml(product.name)}</div>
+      <div class="admin-row__price">${product.original_price ? `<span class="admin-row__price-original">${escapeHtml(product.original_price)}</span> ` : ""}${escapeHtml(product.price || "sem preço")}${product.category ? ` · ${escapeHtml(product.category)}` : ""}</div>
     </div>
     <div class="admin-row__actions">
       <button type="button" data-action="edit">Editar</button>
@@ -209,6 +210,37 @@ async function removeProduct(id) {
   loadProducts();
 }
 
+const settingsForm = document.getElementById("settings-form");
+const whatsappInput = document.getElementById("field-whatsapp");
+const settingsStatus = document.getElementById("settings-status");
+
+async function loadSettings() {
+  const { data, error } = await supabase.from("settings").select("whatsapp_number").eq("id", "main").maybeSingle();
+  if (error) {
+    settingsStatus.textContent = "Configurações ainda não disponíveis (rode o settings.sql no Supabase).";
+    return;
+  }
+  whatsappInput.value = (data && data.whatsapp_number) || "";
+}
+
+settingsForm.addEventListener("submit", async (event) => {
+  event.preventDefault();
+
+  const number = whatsappInput.value.trim().replace(/\D/g, "");
+  if (!number) return;
+
+  settingsStatus.textContent = "Salvando...";
+  const { error } = await supabase.from("settings").upsert({ id: "main", whatsapp_number: number });
+
+  if (error) {
+    settingsStatus.textContent = "Erro ao salvar: " + error.message;
+    return;
+  }
+
+  whatsappInput.value = number;
+  settingsStatus.textContent = "Número salvo com sucesso.";
+});
+
 const statsTotal = document.getElementById("stats-total");
 const statsToday = document.getElementById("stats-today");
 const statsProducts = document.getElementById("stats-products");
@@ -247,7 +279,7 @@ async function loadStats() {
         <div class="stats-ranking__row">
           <span class="stats-ranking__position">${index + 1}º</span>
           <div class="stats-ranking__bar-wrap">
-            <span class="stats-ranking__name">${item.name}</span>
+            <span class="stats-ranking__name">${escapeHtml(item.name)}</span>
             <div class="stats-ranking__bar">
               <div class="stats-ranking__bar-fill" style="width: ${(item.count / maxCount) * 100}%"></div>
             </div>
@@ -296,5 +328,6 @@ document.getElementById("seed-btn").addEventListener("click", async () => {
   if (session) {
     loadProducts();
     loadStats();
+    loadSettings();
   }
 })();
