@@ -22,8 +22,11 @@ const cancelEditBtn = document.getElementById("cancel-edit-btn");
 const formTitle = document.getElementById("form-title");
 const sectionsRoot = document.getElementById("admin-sections");
 const emptyMsg = document.getElementById("admin-empty");
+const adminFilterChipsRoot = document.getElementById("admin-filter-chips");
 
 let editingId = null;
+let currentProducts = [];
+let activeAdminCategory = "Todos";
 
 async function requireSession() {
   const { data: { session } } = await supabase.auth.getSession();
@@ -50,9 +53,43 @@ async function loadProducts() {
     alert("Erro ao carregar produtos: " + error.message);
     return;
   }
-  renderSections(data || []);
-  renderSectionOptions(data || []);
-  renderCategoryOptions(data || []);
+  currentProducts = data || [];
+  buildAdminFilterChips(currentProducts);
+  renderFilteredSections();
+  renderSectionOptions(currentProducts);
+  renderCategoryOptions(currentProducts);
+}
+
+function buildAdminFilterChips(products) {
+  const categories = new Set();
+  products.forEach((p) => categories.add(p.category || "Outros"));
+  const chips = ["Todos", ...Array.from(categories).sort()];
+
+  if (!chips.includes(activeAdminCategory)) activeAdminCategory = "Todos";
+
+  adminFilterChipsRoot.innerHTML = "";
+  chips.forEach((category) => {
+    const chip = document.createElement("button");
+    chip.type = "button";
+    chip.className = "filter-chip";
+    chip.textContent = category;
+    chip.classList.toggle("filter-chip--active", category === activeAdminCategory);
+    chip.addEventListener("click", () => {
+      activeAdminCategory = category;
+      adminFilterChipsRoot.querySelectorAll(".filter-chip").forEach((el) => {
+        el.classList.toggle("filter-chip--active", el.textContent === category);
+      });
+      renderFilteredSections();
+    });
+    adminFilterChipsRoot.appendChild(chip);
+  });
+}
+
+function renderFilteredSections() {
+  const filtered = activeAdminCategory === "Todos"
+    ? currentProducts
+    : currentProducts.filter((p) => (p.category || "Outros") === activeAdminCategory);
+  renderSections(filtered);
 }
 
 function renderSectionOptions(products) {
@@ -68,6 +105,14 @@ function renderCategoryOptions(products) {
 
 function renderSections(products) {
   sectionsRoot.innerHTML = "";
+
+  if (currentProducts.length === 0) {
+    emptyMsg.textContent = 'Nenhum produto cadastrado ainda. Use o formulário acima ou clique em "Importar catálogo padrão".';
+    emptyMsg.hidden = false;
+    return;
+  }
+
+  emptyMsg.textContent = "Nenhum produto nessa categoria.";
   emptyMsg.hidden = products.length > 0;
 
   const bySection = new Map();
